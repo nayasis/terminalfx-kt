@@ -9,20 +9,17 @@ import com.github.nayasis.kotlin.javafx.misc.Desktop
 import com.github.nayasis.kotlin.javafx.misc.set
 import com.github.nayasis.terminalfx.kt.annotation.WebkitCall
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
-import com.github.nayasis.terminalfx.kt.helper.ThreadHelper
-import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.scene.layout.Pane
 import javafx.scene.web.WebView
 import mu.KotlinLogging
 import netscape.javascript.JSObject
-import tornadofx.*
-import java.io.IOException
+import tornadofx.runAsync
+import tornadofx.runLater
 import java.io.Reader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.util.*
 import java.util.concurrent.CountDownLatch
 
 private val logger = KotlinLogging.logger {}
@@ -41,27 +38,21 @@ open class TerminalView(
 
     var inputReader: Reader
         get() = inputReaderProperty.get()
-        set(reader) {
-            inputReaderProperty.set(reader)
-        }
+        set(reader) = inputReaderProperty.set(reader)
 
     var errorReader: Reader
         get() = errorReaderProperty.get()
-        set(reader) {
-            errorReaderProperty.set(reader)
-        }
+        set(reader) = errorReaderProperty.set(reader)
 
     companion object {
         init {
             Runtime.getRuntime().addShutdownHook(object: Thread() {
                 override fun run() {
-                    try {
+                    runCatching {
                         if(tempDirectory.exists()) {
                             tempDirectory!!.delete()
                         }
-                    } catch (e: IOException) {
-                        logger.error(e)
-                    }
+                    }.onFailure { logger.error(it) }
                 }
             })
         }
@@ -69,24 +60,18 @@ open class TerminalView(
 
     init {
         initializeResources()
-        inputReaderProperty.addListener { _, _, reader ->
-            ThreadHelper.start {
-                printReader( reader )
-            }
-        }
-        errorReaderProperty.addListener { _, _, reader: Reader ->
-            ThreadHelper.start {
-                printReader( reader )
-            }
-        }
+        inputReaderProperty.addListener { _, _, reader -> runAsync {
+            printReader( reader )
+        }}
+        errorReaderProperty.addListener { _, _, reader: Reader -> runAsync {
+            printReader( reader )
+        }}
         webView.prefHeightProperty().bind(heightProperty())
         webView.prefWidthProperty().bind(widthProperty())
         webView.engine.loadWorker.stateProperty()?.addListener { _, _, _ ->
             window.setMember( "app", this )
         }
-
         webView.engine.load(tempDirectory!!.resolve("hterm.html").toUri().toString())
-
     }
 
     private fun initializeResources() {
@@ -143,7 +128,7 @@ open class TerminalView(
                 sb.append(data, 0, nRead)
                 print(sb.toString())
             }
-        }
+        }.onFailure { logger.error(it) }
     }
 
     @WebkitCall(from = "hterm")
