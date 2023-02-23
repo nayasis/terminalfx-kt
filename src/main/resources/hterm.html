@@ -22,9 +22,9 @@
 <script>
 
     function updatePrefs(prefs) {
-        var prefsObject = JSON.parse(prefs);
-        for (var key in prefsObject) {
-            var value = prefsObject[key];
+        let prefsObject = JSON.parse(prefs);
+        for (let key in prefsObject) {
+            let value = prefsObject[key];
             if (window.t) {
                 t.getPrefs().set(key, value);
             }
@@ -63,7 +63,7 @@
 
             app.onTerminalInit();
 
-            var io = t.io.push();
+            let io = t.io.push();
 
             io.onVTKeystroke = function (str) {
                 app.command(str);
@@ -71,9 +71,9 @@
 
             io.sendString = io.onVTKeystroke;
 
-            io.onTerminalResize = function (columns, rows) {
-                app.resizeTerminal(columns, rows);
-            };
+            // io.onTerminalResize = function (columns, rows) {
+            //     app.resizeTerminal(columns, rows);
+            // };
 
             t.installKeyboard();
             app.onTerminalReady();
