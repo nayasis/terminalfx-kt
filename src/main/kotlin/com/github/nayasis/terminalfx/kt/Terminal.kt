@@ -82,23 +82,23 @@ class Terminal(
             focusCursor()
             countDownLatch.countDown()
             val exitValue = process!!.waitFor()
-            runLater { runCatching {
+            runCatching {
                 onSuccess?.invoke(this, exitValue)
-            }}
+            }
         } catch (e: Throwable) {
-            runLater { runCatching {
+            runCatching {
                 onFail?.invoke(this, e)
-            }}
+            }
         } finally {
             close()
-            runLater { runCatching {
+            runCatching {
                 onDone?.invoke(this)
-            }}
+            }
         }
 
     }
 
-    private fun close() {
+    fun close() {
         runCatching {
             process?.destroy()
             process = null
