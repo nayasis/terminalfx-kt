@@ -2,22 +2,21 @@ package com.github.nayasis.terminalfx.kt
 
 import com.github.nayasis.kotlin.basica.core.io.delete
 import com.github.nayasis.kotlin.basica.core.io.exists
+import com.github.nayasis.kotlin.basica.core.io.notExists
+import com.github.nayasis.kotlin.basica.etc.error
 import com.github.nayasis.kotlin.basica.reflection.Reflector
+import com.github.nayasis.kotlin.javafx.misc.Desktop
+import com.github.nayasis.kotlin.javafx.misc.set
 import com.github.nayasis.terminalfx.kt.annotation.WebkitCall
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
 import com.github.nayasis.terminalfx.kt.helper.ThreadHelper
 import javafx.beans.property.ObjectProperty
-import javafx.beans.property.ReadOnlyIntegerProperty
-import javafx.beans.property.ReadOnlyIntegerWrapper
 import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.value.ChangeListener
-import javafx.beans.value.ObservableValue
-import javafx.scene.input.Clipboard
-import javafx.scene.input.ClipboardContent
 import javafx.scene.layout.Pane
-import javafx.scene.web.WebEngine
 import javafx.scene.web.WebView
+import mu.KotlinLogging
 import netscape.javascript.JSObject
+import tornadofx.*
 import java.io.IOException
 import java.io.Reader
 import java.nio.file.Files
@@ -26,18 +25,33 @@ import java.nio.file.StandardCopyOption
 import java.util.*
 import java.util.concurrent.CountDownLatch
 
+private val logger = KotlinLogging.logger {}
+
+private var tempDirectory: Path? = null
+
 open class TerminalView(
     var terminalConfig: TerminalConfig = TerminalConfig()
 ): Pane() {
 
-    private var webView: WebView = WebView()
-    private var inputReaderProperty = SimpleObjectProperty<Reader>()
-    private var errorReaderProperty = SimpleObjectProperty<Reader>()
+    private val webView = WebView()
+    private val inputReaderProperty = SimpleObjectProperty<Reader>()
+    private val errorReaderProperty = SimpleObjectProperty<Reader>()
 
     protected val countDownLatch = CountDownLatch(1)
 
+    var inputReader: Reader
+        get() = inputReaderProperty.get()
+        set(reader) {
+            inputReaderProperty.set(reader)
+        }
+
+    var errorReader: Reader
+        get() = errorReaderProperty.get()
+        set(reader) {
+            errorReaderProperty.set(reader)
+        }
+
     companion object {
-        private var tempDirectory: Path? = null
         init {
             Runtime.getRuntime().addShutdownHook(object: Thread() {
                 override fun run() {
@@ -45,8 +59,8 @@ open class TerminalView(
                         if(tempDirectory.exists()) {
                             tempDirectory!!.delete()
                         }
-                    } catch (ex: IOException) {
-                        ex.printStackTrace()
+                    } catch (e: IOException) {
+                        logger.error(e)
                     }
                 }
             })
@@ -55,57 +69,39 @@ open class TerminalView(
 
     init {
         initializeResources()
-        inputReaderProperty.addListener(ChangeListener { observable: ObservableValue<out Reader>?, oldValue: Reader?, newValue: Reader ->
+        inputReaderProperty.addListener { _, _, reader ->
             ThreadHelper.start {
-                printReader(
-                    newValue
-                )
+                printReader( reader )
             }
-        })
-        errorReaderProperty?.addListener(ChangeListener { observable: ObservableValue<out Reader>?, oldValue: Reader?, newValue: Reader ->
+        }
+        errorReaderProperty.addListener { _, _, reader: Reader ->
             ThreadHelper.start {
-                printReader(
-                    newValue
-                )
+                printReader( reader )
             }
-        })
-        webView.engine.loadWorker.stateProperty()?.addListener { _, _, _ ->
-                getWindow().setMember( "app", this )
-            }
+        }
         webView.prefHeightProperty().bind(heightProperty())
         webView.prefWidthProperty().bind(widthProperty())
+        webView.engine.loadWorker.stateProperty()?.addListener { _, _, _ ->
+            window.setMember( "app", this )
+        }
 
-        val htmlPath = tempDirectory!!.resolve("hterm.html")
-        webEngine().load(htmlPath.toUri().toString())
+        webView.engine.load(tempDirectory!!.resolve("hterm.html").toUri().toString())
 
     }
 
     private fun initializeResources() {
-        try {
-            if (Objects.isNull(tempDirectory) || Files.notExists(tempDirectory)) {
-                tempDirectory = Files.createTempDirectory("TerminalFX_Temp")
-            }
-        } catch (e: IOException) {
-            throw RuntimeException(e)
+        if(tempDirectory.notExists()) {
+            tempDirectory = Files.createTempDirectory("TerminalFX_Temp")
         }
-        val htmlPath = tempDirectory!!.resolve("hterm.html")
-        if (Files.notExists(htmlPath)) {
-            try {
-                TerminalView::class.java.getResourceAsStream("/hterm.html").use { html ->
-                    Files.copy(html, htmlPath, StandardCopyOption.REPLACE_EXISTING )
-                }
-            } catch (e: IOException) {
-                throw RuntimeException(e)
-            }
-        }
-        val htermJsPath = tempDirectory!!.resolve("hterm_all.js")
-        if (Files.notExists(htermJsPath)) {
-            try {
-                TerminalView::class.java.getResourceAsStream("/hterm_all.js").use { html ->
-                    Files.copy(html, htermJsPath, StandardCopyOption.REPLACE_EXISTING )
-                }
-            } catch (e: IOException) {
-                throw RuntimeException(e)
+        copyResource("hterm.html")
+        copyResource("hterm_all.js")
+    }
+
+    private fun copyResource(resourceName: String) {
+        val file = tempDirectory!!.resolve(resourceName)
+        if(file.notExists()) {
+            TerminalView::class.java.getResourceAsStream("/$resourceName").use {
+                Files.copy(it, file, StandardCopyOption.REPLACE_EXISTING )
             }
         }
     }
@@ -118,119 +114,79 @@ open class TerminalView(
     fun updatePrefs(terminalConfig: TerminalConfig) {
         if (this.terminalConfig == terminalConfig) return
         this.terminalConfig = terminalConfig
-        val prefs = getPrefs()
-        ThreadHelper.runActionLater({
-            try {
-                getWindow().call("updatePrefs", prefs)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, true)
+        runLater {
+            window.call("updatePrefs", getPrefs())
+        }
     }
-
-//    @WebkitCall(from = "hterm")
-//    fun resizeTerminal(columns: Int, rows: Int) {
-//        columnsProperty!!.set(columns)
-//        rowsProperty!!.set(rows)
-//    }
 
     @WebkitCall
     fun onTerminalInit() {
-        ThreadHelper.runActionLater({ children.add(webView) }, true)
+        runLater {
+            children.add(webView)
+        }
     }
 
     @WebkitCall
     open fun onTerminalReady() {
-        ThreadHelper.start {
-            try {
-                focusCursor()
-                countDownLatch.countDown()
-            } catch (e: Exception) {
-            }
+        runAsync {
+            focusCursor()
+            countDownLatch.countDown()
         }
     }
 
-    private fun printReader(bufferedReader: Reader) {
-        try {
-            var nRead: Int
-            val data = CharArray(1 * 1024)
-            while (bufferedReader.read(data, 0, data.size).also { nRead = it } != -1) {
-                val builder = StringBuilder(nRead)
-                builder.append(data, 0, nRead)
-                print(builder.toString())
+    private fun printReader(reader: Reader) {
+        var nRead: Int
+        val data = CharArray(1 * 1024)
+        runCatching {
+            while (reader.read(data, 0, data.size).also { nRead = it } != -1) {
+                val sb = StringBuilder(nRead)
+                sb.append(data, 0, nRead)
+                print(sb.toString())
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 
     @WebkitCall(from = "hterm")
     fun copy(text: String?) {
-        val clipboard = Clipboard.getSystemClipboard()
-        val clipboardContent = ClipboardContent()
-        clipboardContent.putString(text)
-        clipboard.setContent(clipboardContent)
+        Desktop.clipboard.set(text)
     }
 
-    fun onTerminalFxReady(onReadyAction: Runnable?) {
-        ThreadHelper.start {
-            ThreadHelper.awaitLatch(countDownLatch)
-            if (Objects.nonNull(onReadyAction)) {
-                ThreadHelper.start(onReadyAction)
+    fun onTerminalFxReady(action:() -> Unit) {
+        runAsync {
+            await()
+            runAsync {
+                action.invoke()
             }
         }
     }
 
     protected fun print(text: String?) {
-        ThreadHelper.awaitLatch(countDownLatch)
-        ThreadHelper.runActionLater { getTerminalIO().call("print", text) }
+        await()
+        runLater {
+            terminalIO.call("print", text)
+        }
     }
 
     fun focusCursor() {
-        ThreadHelper.runActionLater({
-            webView!!.requestFocus()
-            getTerminal().call("focus")
-        }, true)
+        runLater {
+            webView.requestFocus()
+            terminal.call("focus")
+        }
     }
 
-    private fun getTerminal(): JSObject {
-        return webEngine().executeScript("t") as JSObject
-    }
+    private val terminal: JSObject
+        get() = webView.engine.executeScript("t") as JSObject
+    private val terminalIO: JSObject
+        get() = webView.engine.executeScript("t.io") as JSObject
+    private val window: JSObject
+        get() = webView.engine.executeScript("window") as JSObject
 
-    private fun getTerminalIO(): JSObject {
-        return webEngine().executeScript("t.io") as JSObject
-    }
-
-    fun getWindow(): JSObject {
-        return webEngine().executeScript("window") as JSObject
-    }
-
-    private fun webEngine(): WebEngine {
-        return webView!!.engine
-    }
-
-    fun inputReaderProperty(): ObjectProperty<Reader>? {
-        return inputReaderProperty
-    }
-
-    fun getInputReader(): Reader? {
-        return inputReaderProperty!!.get()
-    }
-
-    fun setInputReader(reader: Reader) {
-        inputReaderProperty!!.set(reader)
-    }
-
-    fun errorReaderProperty(): ObjectProperty<Reader>? {
-        return errorReaderProperty
-    }
-
-    fun getErrorReader(): Reader? {
-        return errorReaderProperty!!.get()
-    }
-
-    fun setErrorReader(reader: Reader) {
-        errorReaderProperty!!.set(reader)
+    private fun await() {
+        try {
+            countDownLatch.await()
+        } catch (e: InterruptedException) {
+            logger.error(e)
+        }
     }
 
 }

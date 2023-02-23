@@ -75,8 +75,8 @@ class Terminal(
         }
 
         val defaultCharEncoding = System.getProperty("file.encoding")
-        setInputReader(BufferedReader(InputStreamReader(process!!.inputStream, defaultCharEncoding)))
-        setErrorReader(BufferedReader(InputStreamReader(process!!.errorStream, defaultCharEncoding)))
+        inputReader = BufferedReader(InputStreamReader(process!!.inputStream, defaultCharEncoding))
+        errorReader = BufferedReader(InputStreamReader(process!!.errorStream, defaultCharEncoding))
         setOutputWriter(BufferedWriter(OutputStreamWriter(process!!.outputStream, defaultCharEncoding)))
         focusCursor()
         countDownLatch.countDown()
