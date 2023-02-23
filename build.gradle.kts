@@ -30,7 +30,7 @@ application {
 
 javafx {
 	version = "19.0.2.1"
-	modules = listOf("javafx.graphics","javafx.controls","javafx.fxml","javafx.web","javafx.swing")
+	modules = listOf("javafx.controls","javafx.web","javafx.swing")
 }
 
 group = "com.github.nayasis"
