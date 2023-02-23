@@ -82,19 +82,30 @@ class Terminal(
             focusCursor()
             countDownLatch.countDown()
             val exitValue = process!!.waitFor()
-            runLater {
+            runLater { runCatching {
                 onSuccess?.invoke(this, exitValue)
-            }
+            }}
         } catch (e: Throwable) {
-            runLater {
+            runLater { runCatching {
                 onFail?.invoke(this, e)
-            }
+            }}
         } finally {
-            runLater {
+            close()
+            runLater { runCatching {
                 onDone?.invoke(this)
-            }
+            }}
         }
 
+    }
+
+    private fun close() {
+        runCatching {
+            process?.destroy()
+            process = null
+        }
+        runCatching { inputReader.close() }
+        runCatching { errorReader.close() }
+        runCatching { outputWriter.close() }
     }
 
     private fun getEnvironment(): Map<String, String> {
