@@ -29,8 +29,10 @@ class TerminalTest: Application() {
         val terminal = Terminal(config, null)
 
         stage?.apply {
-            title = "TerminalFX"
-            scene = Scene(terminal)
+            title  = "TerminalFX"
+            width  = 600.0
+            height = 400.0
+            scene  = Scene(terminal)
             show()
         }
 
