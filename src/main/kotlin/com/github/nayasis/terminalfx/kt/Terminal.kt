@@ -1,107 +1,107 @@
 package com.github.nayasis.terminalfx.kt
 
+import com.github.nayasis.kotlin.basica.core.extention.isNotEmpty
+import com.github.nayasis.kotlin.basica.core.io.exists
+import com.github.nayasis.kotlin.basica.core.string.toPath
+import com.github.nayasis.kotlin.basica.etc.error
 import com.github.nayasis.terminalfx.kt.annotation.WebkitCall
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
-import com.github.nayasis.terminalfx.kt.helper.ThreadHelper
-import com.pty4j.PtyProcess
-import javafx.beans.property.ObjectProperty
+import com.pty4j.PtyProcessBuilder
 import javafx.beans.property.SimpleObjectProperty
+import mu.KotlinLogging
+import tornadofx.runAsync
+import tornadofx.runLater
 import java.io.BufferedReader
 import java.io.BufferedWriter
-import java.io.IOException
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.io.Writer
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
+private val logger = KotlinLogging.logger {}
+
+@Suppress("MemberVisibilityCanBePrivate")
 class Terminal(
-    terminalConfig: TerminalConfig = TerminalConfig(),
-    val terminalPath: Path? = null,
-): TerminalView(terminalConfig) {
+    config: TerminalConfig = TerminalConfig(),
+    val command: List<String>,
+    val workingDirectory: String? = null,
+    val environments: Map<String,String> = mapOf("TERM" to "xterm"),
+    var onDone:((terminal: Terminal) -> Unit)? = null,
+    var onFail: ((terminal: Terminal, error: Throwable) -> Unit)? = null,
+    var onSuccess: ((terminal: Terminal, exitValue: Int) -> Unit)? = null,
+): TerminalView(config) {
 
-    private var process: PtyProcess? = null
-    private var outputWriterProperty: ObjectProperty<Writer>? = null
-    private var commandQueue: LinkedBlockingQueue<String>? = null
+    var process: Process? = null
+        private set
 
-    init {
-        outputWriterProperty = SimpleObjectProperty()
-        commandQueue = LinkedBlockingQueue()
-    }
+    private val outputWriterProperty = SimpleObjectProperty<Writer>()
+    private val commandQueue = LinkedBlockingQueue<String>()
+
+    var outputWriter: Writer
+        get() = outputWriterProperty.get()
+        set(writer) = outputWriterProperty.set(writer)
 
     @WebkitCall
     fun command(command: String) {
-        try {
-            commandQueue!!.put(command)
-        } catch (e: InterruptedException) {
-            throw RuntimeException(e)
-        }
-        ThreadHelper.start {
-            try {
-                val commandToExecute = commandQueue!!.poll()
-                getOutputWriter().write(commandToExecute)
-                getOutputWriter().flush()
-            } catch (e: IOException) {
-                e.printStackTrace()
+        commandQueue.put(command)
+        runAsync {
+            outputWriter.run {
+                write(commandQueue.poll())
+                flush()
             }
         }
     }
 
+    @WebkitCall
     override fun onTerminalReady() {
-        ThreadHelper.start {
-            try {
+        runAsync {
+            runCatching {
                 initializeProcess()
-            } catch (e: Exception) {
-            }
+            }.onFailure { logger.error(it) }
         }
     }
 
     private fun initializeProcess() {
 
-        val dataDir = getDataDir()
-        val termCommand = terminalConfig.terminalCommand.split("\\s+").toTypedArray()
+        try {
+            process = PtyProcessBuilder(command.toTypedArray())
+                .setEnvironment(getEnvironment())
+                .apply {
+                    if ( workingDirectory?.toPath()?.exists() == true) {
+                        setDirectory(workingDirectory)
+                    }
+                }
+                .start()
 
-        val envs = HashMap(System.getenv()).apply {
-            put("TERM","xterm")
+            System.getProperty("file.encoding").let { charset ->
+                inputReader  = BufferedReader(InputStreamReader(process!!.inputStream, charset))
+                errorReader  = BufferedReader(InputStreamReader(process!!.errorStream, charset))
+                outputWriter = BufferedWriter(OutputStreamWriter(process!!.outputStream, charset))
+            }
+
+            focusCursor()
+            countDownLatch.countDown()
+            val exitValue = process!!.waitFor()
+            runLater {
+                onSuccess?.invoke(this, exitValue)
+            }
+        } catch (e: Throwable) {
+            runLater {
+                onFail?.invoke(this, e)
+            }
+        } finally {
+            runLater {
+                onDone?.invoke(this)
+            }
         }
-        System.setProperty("PTY_LIB_FOLDER", dataDir.resolve("libpty").toString())
-        if (Objects.nonNull(terminalPath) && Files.exists(terminalPath)) {
-            process = PtyProcess.exec(termCommand, envs, terminalPath.toString())
-        } else {
-            process = PtyProcess.exec(termCommand, envs)
+
+    }
+
+    private fun getEnvironment(): Map<String, String> {
+        return HashMap(System.getenv()).apply {
+            if(environments.isNotEmpty())
+                putAll(environments)
         }
-
-        val defaultCharEncoding = System.getProperty("file.encoding")
-        inputReader = BufferedReader(InputStreamReader(process!!.inputStream, defaultCharEncoding))
-        errorReader = BufferedReader(InputStreamReader(process!!.errorStream, defaultCharEncoding))
-        setOutputWriter(BufferedWriter(OutputStreamWriter(process!!.outputStream, defaultCharEncoding)))
-        focusCursor()
-        countDownLatch.countDown()
-        process!!.waitFor()
-    }
-
-    private fun getDataDir(): Path {
-        val userHome = System.getProperty("user.home")
-        return Paths.get(userHome).resolve(".terminalfx")
-    }
-
-    fun outputWriterProperty(): ObjectProperty<Writer>? {
-        return outputWriterProperty
-    }
-
-    fun getOutputWriter(): Writer {
-        return outputWriterProperty!!.get()
-    }
-
-    fun setOutputWriter(writer: Writer) {
-        outputWriterProperty!!.set(writer)
-    }
-
-    fun getProcess(): PtyProcess? {
-        return process
     }
 
 }

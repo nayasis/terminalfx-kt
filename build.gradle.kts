@@ -52,19 +52,16 @@ repositories {
 dependencies {
 
 	// common
-	implementation("com.github.nayasis:basica-kt:0.2.15")
+	implementation("com.github.nayasis:basica-kt:0.2.16")
 	implementation("com.github.nayasis:basicafx-kt:0.1.18")
 	implementation("no.tornado:tornadofx:1.7.20")
-	implementation("de.jensd:fontawesomefx:8.9")
-	implementation("org.controlsfx:controlsfx:11.1.0")
-  	implementation("commons-cli:commons-cli:1.4")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
 	implementation("org.jetbrains.pty4j:pty4j:0.12.10")
 
 	// kotlin
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-	implementation( "io.github.microutils:kotlin-logging:2.0.10" )
+	implementation("io.github.microutils:kotlin-logging:2.0.10")
 	implementation("au.com.console:kassava:2.1.0")
 
 	// test

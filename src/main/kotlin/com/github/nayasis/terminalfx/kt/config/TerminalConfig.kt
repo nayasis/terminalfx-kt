@@ -2,7 +2,6 @@ package com.github.nayasis.terminalfx.kt.config
 
 import au.com.console.kassava.kotlinEquals
 import au.com.console.kassava.kotlinHashCode
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.*
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -60,20 +59,16 @@ class TerminalConfig {
     @JsonProperty(value = "user-css")
     var userCss = "data:text/plain;base64,eC1zY3JlZW4geyBjdXJzb3I6IGF1dG87IH0="
 
-    @JsonIgnore
-    var terminalCommand = "/bin/bash -i"
-
     override fun equals(other: Any?) = kotlinEquals(other,TerminalConfig::class.memberProperties.toTypedArray())
 
     override fun hashCode(): Int = kotlinHashCode(properties = TerminalConfig::class.memberProperties.toTypedArray())
 
-    private fun colorToHex(color: Color): String {
-        return String.format(
-            "#%02X%02X%02X",
-            (color.red * 255).toInt(),
-            (color.green * 255).toInt(),
-            (color.blue * 255).toInt()
-        )
-    }
+}
 
+fun Color.toHex(): String {
+    return "#%02X%02X%02X".format(
+        (red * 255).toInt(),
+        (green * 255).toInt(),
+        (blue * 255).toInt()
+    )
 }
