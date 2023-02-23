@@ -2,7 +2,6 @@ package com.github.nayasis.terminalfx.kt.config
 
 import au.com.console.kassava.kotlinEquals
 import au.com.console.kassava.kotlinHashCode
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.*
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -59,9 +58,6 @@ class TerminalConfig {
 
     @JsonProperty(value = "user-css")
     var userCss = "data:text/plain;base64,eC1zY3JlZW4geyBjdXJzb3I6IGF1dG87IH0="
-
-    @JsonIgnore
-    var commandline: List<String>? = null
 
     override fun equals(other: Any?) = kotlinEquals(other,TerminalConfig::class.memberProperties.toTypedArray())
 
