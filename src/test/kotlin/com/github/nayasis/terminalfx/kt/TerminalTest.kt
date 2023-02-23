@@ -2,9 +2,11 @@ package com.github.nayasis.terminalfx.kt
 
 import com.github.nayasis.kotlin.basica.etc.Platforms
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
+import com.github.nayasis.terminalfx.kt.config.toHex
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.scene.Scene
+import javafx.scene.paint.Color
 import javafx.stage.Stage
 import tornadofx.launch
 import kotlin.system.exitProcess
@@ -17,14 +19,17 @@ class TerminalTest: Application() {
     override fun start(stage: Stage?) {
 
         val config = TerminalConfig().apply {
-            terminalCommand = if(Platforms.isWindows) "cmd.exe" else "/bin/bash -i"
+            commandline = if(Platforms.isWindows) "cmd.exe" else "/bin/bash -i"
+//            cursorColor = Color.rgb(255, 0, 0, 0.5).toHex()
             cursorColor = "white"
-            foregroundColor = "white"
-            backgroundColor = "black"
+            foregroundColor = Color.rgb(240, 240, 240).toHex()
+            backgroundColor = Color.rgb(16, 16, 16).toHex()
             fontSize = 12
+            scrollWheelMoveMultiplier = 3.0
             enableClipboardNotice = false
             scrollbarVisible = false
         }
+
         val terminal = Terminal(config, null)
 
         stage?.apply {

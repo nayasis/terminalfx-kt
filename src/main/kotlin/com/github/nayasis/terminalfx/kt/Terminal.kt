@@ -1,6 +1,11 @@
 package com.github.nayasis.terminalfx.kt
 
+import com.github.nayasis.kotlin.basica.core.extention.ifNotEmpty
+import com.github.nayasis.kotlin.basica.core.extention.isNotEmpty
+import com.github.nayasis.kotlin.basica.core.io.Paths
+import com.github.nayasis.kotlin.basica.core.string.toFile
 import com.github.nayasis.kotlin.basica.etc.error
+import com.github.nayasis.kotlin.basica.exec.Command
 import com.github.nayasis.terminalfx.kt.annotation.WebkitCall
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
 import com.pty4j.PtyProcess
@@ -12,9 +17,9 @@ import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.io.Writer
+import java.lang.ProcessBuilder.Redirect.*
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -22,10 +27,10 @@ private val logger = KotlinLogging.logger {}
 
 class Terminal(
     terminalConfig: TerminalConfig = TerminalConfig(),
-    val workingDirectory: Path? = null,
+    private val workingDirectory: String? = null,
 ): TerminalView(terminalConfig) {
 
-    var process: PtyProcess? = null
+    var process: Process? = null
         private set
 
     private val outputWriterProperty = SimpleObjectProperty<Writer>()
@@ -40,7 +45,9 @@ class Terminal(
         commandQueue.put(command)
         runAsync {
             outputWriter.run {
-                write(commandQueue.poll())
+                val c = commandQueue.poll()
+                logger.trace { ">> send command : $c" }
+                write(c)
                 flush()
             }
         }
@@ -55,33 +62,68 @@ class Terminal(
         }
     }
 
-    private fun initializeProcess() {
+//    private fun initializeProcess() {
+//
+//        setPtyLibFolder()
+//
+//        val commandline = terminalConfig.commandline.split("\\s+").toTypedArray()
+//
+//        process = if ( workingDirectory.isNotEmpty() && Files.exists(workingDirectory)) {
+//            PtyProcess.exec(commandline, getEnvironment(), workingDirectory.toString())
+//        } else {
+//            PtyProcess.exec(commandline, getEnvironment())
+//        }
+//
+//        val charset = System.getProperty("file.encoding")
+//        inputReader  = BufferedReader(InputStreamReader(process!!.inputStream, charset))
+//        errorReader  = BufferedReader(InputStreamReader(process!!.errorStream, charset))
+//        outputWriter = BufferedWriter(OutputStreamWriter(process!!.outputStream, charset))
+//
+//        focusCursor()
+//        countDownLatch.countDown()
+//        process!!.waitFor()
+//
+//    }
 
-        val dataDir = getDataDir()
-        val termCommand = terminalConfig.terminalCommand.split("\\s+").toTypedArray()
-
-        val envs = HashMap(System.getenv()).apply {
-            put("TERM","xterm")
+    private fun getEnvironment(): Map<String, String> {
+        return HashMap(System.getenv()).apply {
+            put("TERM", "xterm")
         }
-        System.setProperty("PTY_LIB_FOLDER", dataDir.resolve("libpty").toString())
-        if (Objects.nonNull(workingDirectory) && Files.exists(workingDirectory)) {
-            process = PtyProcess.exec(termCommand, envs, workingDirectory.toString())
-        } else {
-            process = PtyProcess.exec(termCommand, envs)
-        }
-
-        val defaultCharEncoding = System.getProperty("file.encoding")
-        inputReader  = BufferedReader(InputStreamReader(process!!.inputStream, defaultCharEncoding))
-        errorReader  = BufferedReader(InputStreamReader(process!!.errorStream, defaultCharEncoding))
-        outputWriter = BufferedWriter(OutputStreamWriter(process!!.outputStream, defaultCharEncoding))
-        focusCursor()
-        countDownLatch.countDown()
-        process!!.waitFor()
     }
 
-    private fun getDataDir(): Path {
-        val userHome = System.getProperty("user.home")
-        return Paths.get(userHome).resolve(".terminalfx")
+    private fun setPtyLibFolder() {
+        System.setProperty(
+            "PTY_LIB_FOLDER",
+            Paths.userHome.resolve(".terminalfx/libpty").toString()
+        )
+    }
+
+    private fun initializeProcess() {
+
+        process = ProcessBuilder(terminalConfig.commandline.split(" \\s+")).apply {
+            environment().putAll(mapOf("TERM" to "xterm"))
+            workingDirectory?.toFile().ifNotEmpty { if(it.exists()) directory(it) }
+            redirectInput(PIPE)
+            redirectError(PIPE)
+            redirectOutput(DISCARD)
+        }.start()
+
+        process = Command(
+            cli = terminalConfig.commandline,
+            workingDirectory = workingDirectory,
+            environment = getEnvironment(),
+        ).runProcess(redirectError = false)
+
+        val charset = System.getProperty("file.encoding")
+        inputReader  = BufferedReader(InputStreamReader(process!!.inputStream, charset))
+        errorReader  = BufferedReader(InputStreamReader(process!!.errorStream, charset))
+        outputWriter = BufferedWriter(OutputStreamWriter(process!!.outputStream, charset))
+
+        focusCursor()
+
+        countDownLatch.countDown()
+        process!!.waitFor()
+
     }
 
 }
