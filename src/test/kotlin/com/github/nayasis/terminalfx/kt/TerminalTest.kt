@@ -19,10 +19,9 @@ class TerminalTest: Application() {
     override fun start(stage: Stage?) {
 
         val config = TerminalConfig().apply {
-            commandline = if(Platforms.isWindows) "cmd.exe" else "/bin/bash -i"
-//            cursorColor = Color.rgb(255, 0, 0, 0.5).toHex()
+            commandline = (if(Platforms.isWindows) "cmd.exe" else "/bin/bash -i").split("\\s+")
             cursorColor = "white"
-            foregroundColor = Color.rgb(240, 240, 240).toHex()
+            foregroundColor = Color.rgb(200, 200, 200).toHex()
             backgroundColor = Color.rgb(16, 16, 16).toHex()
             fontSize = 12
             scrollWheelMoveMultiplier = 3.0
@@ -30,7 +29,7 @@ class TerminalTest: Application() {
             scrollbarVisible = false
         }
 
-        val terminal = Terminal(config, null)
+        val terminal = Terminal(config, "merong")
 
         stage?.apply {
             title  = "TerminalFX"
