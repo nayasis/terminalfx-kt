@@ -20,8 +20,7 @@ import tornadofx.runLater
 import java.io.Reader
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import java.nio.file.StandardCopyOption.*
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.util.concurrent.CountDownLatch
 
 private val logger = KotlinLogging.logger {}

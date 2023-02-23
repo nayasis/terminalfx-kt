@@ -2,12 +2,11 @@ package com.github.nayasis.terminalfx.kt
 
 import com.github.nayasis.kotlin.basica.etc.Platforms
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
-import com.github.nayasis.terminalfx.kt.helper.ThreadHelper
 import javafx.application.Application
 import javafx.application.Platform
 import javafx.scene.Scene
 import javafx.stage.Stage
-import tornadofx.*
+import tornadofx.launch
 import kotlin.system.exitProcess
 
 fun main() {
@@ -40,7 +39,6 @@ class TerminalTest: Application() {
 
     }
     override fun stop() {
-        ThreadHelper.stopExecutorService()
         Platform.exit()
         exitProcess(0)
     }
