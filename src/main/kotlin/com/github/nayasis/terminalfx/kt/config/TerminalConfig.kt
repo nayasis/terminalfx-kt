@@ -35,7 +35,7 @@ class TerminalConfig {
     var backgroundColor = "white"
 
     @JsonProperty("font-size")
-    var fontSize = 10
+    var fontSize = 14
 
     @JsonProperty(value = "foreground-color")
     var foregroundColor = "black"

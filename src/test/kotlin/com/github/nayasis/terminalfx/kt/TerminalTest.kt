@@ -19,6 +19,12 @@ class TerminalTest: Application() {
 
         val config = TerminalConfig().apply {
             terminalCommand = if(Platforms.isWindows) "cmd.exe" else "/bin/bash -i"
+            cursorColor = "white"
+            foregroundColor = "white"
+            backgroundColor = "black"
+            fontSize = 12
+            enableClipboardNotice = false
+            scrollbarVisible = false
         }
         val terminal = Terminal(config, null)
 
