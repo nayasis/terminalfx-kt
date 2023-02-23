@@ -30,11 +30,9 @@ open class TerminalView(
     var terminalConfig: TerminalConfig = TerminalConfig()
 ): Pane() {
 
-    private var webView: WebView? = null
-    private var columnsProperty: ReadOnlyIntegerWrapper? = null
-    private var rowsProperty: ReadOnlyIntegerWrapper? = null
-    private var inputReaderProperty: ObjectProperty<Reader>? = null
-    private var errorReaderProperty: ObjectProperty<Reader>? = null
+    private var webView: WebView = WebView()
+    private var inputReaderProperty = SimpleObjectProperty<Reader>()
+    private var errorReaderProperty = SimpleObjectProperty<Reader>()
 
     protected val countDownLatch = CountDownLatch(1)
 
@@ -57,12 +55,7 @@ open class TerminalView(
 
     init {
         initializeResources()
-        webView = WebView()
-        columnsProperty = ReadOnlyIntegerWrapper(150)
-        rowsProperty = ReadOnlyIntegerWrapper(10)
-        inputReaderProperty = SimpleObjectProperty()
-        errorReaderProperty = SimpleObjectProperty()
-        inputReaderProperty?.addListener(ChangeListener { observable: ObservableValue<out Reader>?, oldValue: Reader?, newValue: Reader ->
+        inputReaderProperty.addListener(ChangeListener { observable: ObservableValue<out Reader>?, oldValue: Reader?, newValue: Reader ->
             ThreadHelper.start {
                 printReader(
                     newValue
@@ -76,13 +69,15 @@ open class TerminalView(
                 )
             }
         })
-        webView?.engine?.loadWorker?.stateProperty()?.addListener { _, _, _ ->
+        webView.engine.loadWorker.stateProperty()?.addListener { _, _, _ ->
                 getWindow().setMember( "app", this )
             }
-        webView?.prefHeightProperty()?.bind(heightProperty())
-        webView?.prefWidthProperty()?.bind(widthProperty())
+        webView.prefHeightProperty().bind(heightProperty())
+        webView.prefWidthProperty().bind(widthProperty())
+
         val htmlPath = tempDirectory!!.resolve("hterm.html")
         webEngine().load(htmlPath.toUri().toString())
+
     }
 
     private fun initializeResources() {
@@ -97,11 +92,7 @@ open class TerminalView(
         if (Files.notExists(htmlPath)) {
             try {
                 TerminalView::class.java.getResourceAsStream("/hterm.html").use { html ->
-                    Files.copy(
-                        html,
-                        htmlPath,
-                        StandardCopyOption.REPLACE_EXISTING
-                    )
+                    Files.copy(html, htmlPath, StandardCopyOption.REPLACE_EXISTING )
                 }
             } catch (e: IOException) {
                 throw RuntimeException(e)
@@ -111,11 +102,7 @@ open class TerminalView(
         if (Files.notExists(htermJsPath)) {
             try {
                 TerminalView::class.java.getResourceAsStream("/hterm_all.js").use { html ->
-                    Files.copy(
-                        html,
-                        htermJsPath,
-                        StandardCopyOption.REPLACE_EXISTING
-                    )
+                    Files.copy(html, htermJsPath, StandardCopyOption.REPLACE_EXISTING )
                 }
             } catch (e: IOException) {
                 throw RuntimeException(e)
@@ -141,11 +128,11 @@ open class TerminalView(
         }, true)
     }
 
-    @WebkitCall(from = "hterm")
-    fun resizeTerminal(columns: Int, rows: Int) {
-        columnsProperty!!.set(columns)
-        rowsProperty!!.set(rows)
-    }
+//    @WebkitCall(from = "hterm")
+//    fun resizeTerminal(columns: Int, rows: Int) {
+//        columnsProperty!!.set(columns)
+//        rowsProperty!!.set(rows)
+//    }
 
     @WebkitCall
     fun onTerminalInit() {
@@ -221,20 +208,6 @@ open class TerminalView(
     private fun webEngine(): WebEngine {
         return webView!!.engine
     }
-
-    fun columnsProperty(): ReadOnlyIntegerProperty? {
-        return columnsProperty!!.readOnlyProperty
-    }
-
-    val columns: Int
-        get() = columnsProperty!!.get()
-
-    fun rowsProperty(): ReadOnlyIntegerProperty? {
-        return rowsProperty!!.readOnlyProperty
-    }
-
-    val rows: Int
-        get() = rowsProperty!!.get()
 
     fun inputReaderProperty(): ObjectProperty<Reader>? {
         return inputReaderProperty
