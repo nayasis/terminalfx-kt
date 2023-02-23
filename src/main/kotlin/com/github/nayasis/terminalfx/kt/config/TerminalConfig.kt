@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.*
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.github.nayasis.terminalfx.kt.helper.FxHelper
 import javafx.scene.paint.Color
 import java.util.*
 import kotlin.reflect.full.memberProperties
@@ -186,15 +185,15 @@ class TerminalConfig {
     }
 
     fun setBackgroundColor(color: Color) {
-        setBackgroundColor(FxHelper.colorToHex(color))
+        setBackgroundColor(colorToHex(color))
     }
 
     fun setForegroundColor(color: Color) {
-        setForegroundColor(FxHelper.colorToHex(color))
+        setForegroundColor(colorToHex(color))
     }
 
     fun setCursorColor(color: Color) {
-        setCursorColor(FxHelper.colorToHex(color))
+        setCursorColor(colorToHex(color))
     }
 
     fun getFontFamily(): String? {
@@ -216,5 +215,14 @@ class TerminalConfig {
     override fun equals(other: Any?) = kotlinEquals(other,TerminalConfig::class.memberProperties.toTypedArray())
 
     override fun hashCode(): Int = kotlinHashCode(properties = TerminalConfig::class.memberProperties.toTypedArray())
+
+    private fun colorToHex(color: Color): String {
+        return String.format(
+            "#%02X%02X%02X",
+            (color.red * 255).toInt(),
+            (color.green * 255).toInt(),
+            (color.blue * 255).toInt()
+        )
+    }
 
 }

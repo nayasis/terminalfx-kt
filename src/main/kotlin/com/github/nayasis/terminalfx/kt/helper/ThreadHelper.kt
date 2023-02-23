@@ -50,12 +50,6 @@ class ThreadHelper { companion object {
         thread.start()
     }
 
-    fun sleep(millis: Int) {
-        try {
-            Thread.sleep(millis.toLong())
-        } catch (e: InterruptedException) {}
-    }
-
     fun awaitLatch(countDownLatch: CountDownLatch) {
         try {
             countDownLatch.await()
