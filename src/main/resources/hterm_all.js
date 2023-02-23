@@ -4412,7 +4412,12 @@ lib.wc.unambiguous=[[0x1100,0x115f],[0x231a,0x231b],[0x2329,0x232a],[0x23e9,0x23
       node=node.parentNode;}while(node.nextSibling){node=node.nextSibling;endOffset+=hterm.TextAttributes.nodeWidth(node);}}var rv=this.getRowsText(selection.startRow.rowIndex,selection.endRow.rowIndex+1);return lib.wc.substring(rv,startOffset,lib.wc.strWidth(rv)-endOffset);};/**
  * Copy the current selection to the system clipboard, then clear it after a
  * short delay.
- */hterm.Terminal.prototype.copySelectionToClipboard=function(){var text=this.getSelectionText();if(text!=null)this.copyStringToClipboard(text);};hterm.Terminal.prototype.overlaySize=function(){this.showOverlay(this.screenSize.width+'x'+this.screenSize.height);};/**
+ */
+hterm.Terminal.prototype.copySelectionToClipboard=function(){var text=this.getSelectionText();if(text!=null)this.copyStringToClipboard(text);};
+hterm.Terminal.prototype.overlaySize=function(){
+  // this.showOverlay(this.screenSize.width+'x'+this.screenSize.height);
+};
+ /**
  * Invoked by hterm.Terminal.Keyboard when a VT keystroke is detected.
  *
  * @param {string} string The VT string representing the keystroke, in UTF-16.
