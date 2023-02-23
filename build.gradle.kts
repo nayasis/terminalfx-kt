@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+	`maven-publish`
 	kotlin("jvm") version "1.8.10"
 	kotlin("plugin.jpa") version "1.8.10"
 	kotlin("plugin.noarg") version "1.8.10"
@@ -81,5 +82,16 @@ tasks.withType<KotlinCompile> {
 			"-Xjsr305=strict"
 		)
 		jvmTarget = "11"
+	}
+}
+
+publishing {
+	publications {
+		create<MavenPublication>("maven") {
+			groupId = "${group}"
+			artifactId = "${rootProject.name}"
+			version = "${version}"
+			from(components["java"])
+		}
 	}
 }
