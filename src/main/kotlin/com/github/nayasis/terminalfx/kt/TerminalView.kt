@@ -1,8 +1,8 @@
 package com.github.nayasis.terminalfx.kt
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.nayasis.kotlin.basica.core.io.delete
 import com.github.nayasis.kotlin.basica.core.io.exists
+import com.github.nayasis.kotlin.basica.reflection.Reflector
 import com.github.nayasis.terminalfx.kt.annotation.WebkitCall
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
 import com.github.nayasis.terminalfx.kt.helper.ThreadHelper
@@ -12,7 +12,6 @@ import javafx.beans.property.ReadOnlyIntegerWrapper
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
-import javafx.concurrent.Worker
 import javafx.scene.input.Clipboard
 import javafx.scene.input.ClipboardContent
 import javafx.scene.layout.Pane
@@ -27,14 +26,15 @@ import java.nio.file.StandardCopyOption
 import java.util.*
 import java.util.concurrent.CountDownLatch
 
-open class TerminalView(): Pane() {
+open class TerminalView(
+    var terminalConfig: TerminalConfig = TerminalConfig()
+): Pane() {
 
     private var webView: WebView? = null
     private var columnsProperty: ReadOnlyIntegerWrapper? = null
     private var rowsProperty: ReadOnlyIntegerWrapper? = null
     private var inputReaderProperty: ObjectProperty<Reader>? = null
     private var errorReaderProperty: ObjectProperty<Reader>? = null
-    private var terminalConfig: TerminalConfig = TerminalConfig()
 
     protected val countDownLatch = CountDownLatch(1)
 
@@ -125,18 +125,12 @@ open class TerminalView(): Pane() {
 
     @WebkitCall(from = "hterm")
     fun getPrefs(): String {
-        return try {
-            ObjectMapper().writeValueAsString(getTerminalConfig())
-        } catch (e: Exception) {
-            throw RuntimeException(e)
-        }
+        return Reflector.toJson(terminalConfig)
     }
 
     fun updatePrefs(terminalConfig: TerminalConfig) {
-        if (getTerminalConfig().equals(terminalConfig)) {
-            return
-        }
-        setTerminalConfig(terminalConfig)
+        if (this.terminalConfig == terminalConfig) return
+        this.terminalConfig = terminalConfig
         val prefs = getPrefs()
         ThreadHelper.runActionLater({
             try {
@@ -228,32 +222,19 @@ open class TerminalView(): Pane() {
         return webView!!.engine
     }
 
-    fun getTerminalConfig(): TerminalConfig {
-        if (Objects.isNull(terminalConfig)) {
-            terminalConfig = TerminalConfig()
-        }
-        return terminalConfig
-    }
-
-    fun setTerminalConfig(terminalConfig: TerminalConfig) {
-        this.terminalConfig = terminalConfig
-    }
-
     fun columnsProperty(): ReadOnlyIntegerProperty? {
         return columnsProperty!!.readOnlyProperty
     }
 
-    fun getColumns(): Int {
-        return columnsProperty!!.get()
-    }
+    val columns: Int
+        get() = columnsProperty!!.get()
 
     fun rowsProperty(): ReadOnlyIntegerProperty? {
         return rowsProperty!!.readOnlyProperty
     }
 
-    fun getRows(): Int {
-        return rowsProperty!!.get()
-    }
+    val rows: Int
+        get() = rowsProperty!!.get()
 
     fun inputReaderProperty(): ObjectProperty<Reader>? {
         return inputReaderProperty

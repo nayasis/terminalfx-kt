@@ -14,203 +14,54 @@ import kotlin.reflect.full.memberProperties
 class TerminalConfig {
 
     @JsonProperty("use-default-window-copy")
-    private var useDefaultWindowCopy = true
+    var useDefaultWindowCopy = true
 
     @JsonProperty("clear-selection-after-copy")
-    private var clearSelectionAfterCopy = true
+    var clearSelectionAfterCopy = true
 
     @JsonProperty("copy-on-select")
-    private var copyOnSelect = false
+    var copyOnSelect = true
 
     @JsonProperty("ctrl-c-copy")
-    private var ctrlCCopy = true
+    var ctrlCCopy = false
 
     @JsonProperty("ctrl-v-paste")
-    private var ctrlVPaste = true
+    var ctrlVPaste = false
 
     @JsonProperty("cursor-color")
-    private var cursorColor = "black"
+    var cursorColor = "black"
 
     @JsonProperty(value = "background-color")
-    private var backgroundColor = "white"
+    var backgroundColor = "white"
 
     @JsonProperty("font-size")
-    private var fontSize = 14
+    var fontSize = 10
 
     @JsonProperty(value = "foreground-color")
-    private var foregroundColor = "black"
+    var foregroundColor = "black"
 
     @JsonProperty("cursor-blink")
-    private var cursorBlink = false
+    var cursorBlink = false
 
     @JsonProperty("scrollbar-visible")
-    private var scrollbarVisible = true
+    var scrollbarVisible = true
 
     @JsonProperty("enable-clipboard-notice")
-    private var enableClipboardNotice = true
+    var enableClipboardNotice = true
 
     @JsonProperty("scroll-wheel-move-multiplier")
-    private var scrollWhellMoveMultiplier = 0.1
+    var scrollWheelMoveMultiplier = 0.5
 
     @JsonProperty("font-family")
-    private var fontFamily = "\"DejaVu Sans Mono\", \"Everson Mono\", FreeMono, \"Menlo\", \"Terminal\", monospace"
+    var fontFamily = """
+         "DejaVu Sans Mono", "Everson Mono", FreeMono, "Menlo", "Terminal", monospace
+       """.trim()
 
     @JsonProperty(value = "user-css")
-    private var userCss = "data:text/plain;base64," + "eC1zY3JlZW4geyBjdXJzb3I6IGF1dG87IH0="
+    var userCss = "data:text/plain;base64,eC1zY3JlZW4geyBjdXJzb3I6IGF1dG87IH0="
 
     @JsonIgnore
-    private var windowsTerminalStarter = "cmd.exe"
-
-    @JsonIgnore
-    private var unixTerminalStarter = "/bin/bash -i"
-
-    fun isUseDefaultWindowCopy(): Boolean {
-        return useDefaultWindowCopy
-    }
-
-    fun setUseDefaultWindowCopy(useDefaultWindowCopy: Boolean) {
-        this.useDefaultWindowCopy = useDefaultWindowCopy
-    }
-
-    fun isClearSelectionAfterCopy(): Boolean {
-        return clearSelectionAfterCopy
-    }
-
-    fun setClearSelectionAfterCopy(clearSelectionAfterCopy: Boolean) {
-        this.clearSelectionAfterCopy = clearSelectionAfterCopy
-    }
-
-    fun isCopyOnSelect(): Boolean {
-        return copyOnSelect
-    }
-
-    fun setCopyOnSelect(copyOnSelect: Boolean) {
-        this.copyOnSelect = copyOnSelect
-    }
-
-    fun isCtrlCCopy(): Boolean {
-        return ctrlCCopy
-    }
-
-    fun setCtrlCCopy(ctrlCCopy: Boolean) {
-        this.ctrlCCopy = ctrlCCopy
-    }
-
-    fun isCtrlVPaste(): Boolean {
-        return ctrlVPaste
-    }
-
-    fun setCtrlVPaste(ctrlVPaste: Boolean) {
-        this.ctrlVPaste = ctrlVPaste
-    }
-
-    fun getCursorColor(): String? {
-        return cursorColor
-    }
-
-    fun setCursorColor(cursorColor: String) {
-        this.cursorColor = cursorColor
-    }
-
-    fun getBackgroundColor(): String? {
-        return backgroundColor
-    }
-
-    fun setBackgroundColor(backgroundColor: String) {
-        this.backgroundColor = backgroundColor
-    }
-
-    fun getFontSize(): Int {
-        return fontSize
-    }
-
-    fun setFontSize(fontSize: Int) {
-        this.fontSize = fontSize
-    }
-
-    fun getForegroundColor(): String? {
-        return foregroundColor
-    }
-
-    fun setForegroundColor(foregroundColor: String) {
-        this.foregroundColor = foregroundColor
-    }
-
-    fun isCursorBlink(): Boolean {
-        return cursorBlink
-    }
-
-    fun setCursorBlink(cursorBlink: Boolean) {
-        this.cursorBlink = cursorBlink
-    }
-
-    fun isScrollbarVisible(): Boolean {
-        return scrollbarVisible
-    }
-
-    fun setScrollbarVisible(scrollbarVisible: Boolean) {
-        this.scrollbarVisible = scrollbarVisible
-    }
-
-    fun getScrollWhellMoveMultiplier(): Double {
-        return scrollWhellMoveMultiplier
-    }
-
-    fun setScrollWhellMoveMultiplier(scrollWhellMoveMultiplier: Double) {
-        this.scrollWhellMoveMultiplier = scrollWhellMoveMultiplier
-    }
-
-    fun getUserCss(): String? {
-        return userCss
-    }
-
-    fun setUserCss(userCss: String) {
-        this.userCss = userCss
-    }
-
-    fun getWindowsTerminalStarter(): String? {
-        return windowsTerminalStarter
-    }
-
-    fun setWindowsTerminalStarter(windowsTerminalStarter: String) {
-        this.windowsTerminalStarter = windowsTerminalStarter
-    }
-
-    fun getUnixTerminalStarter(): String? {
-        return unixTerminalStarter
-    }
-
-    fun setUnixTerminalStarter(unixTerminalStarter: String) {
-        this.unixTerminalStarter = unixTerminalStarter
-    }
-
-    fun setBackgroundColor(color: Color) {
-        setBackgroundColor(colorToHex(color))
-    }
-
-    fun setForegroundColor(color: Color) {
-        setForegroundColor(colorToHex(color))
-    }
-
-    fun setCursorColor(color: Color) {
-        setCursorColor(colorToHex(color))
-    }
-
-    fun getFontFamily(): String? {
-        return fontFamily
-    }
-
-    fun setFontFamily(fontFamily: String) {
-        this.fontFamily = fontFamily
-    }
-
-    fun isEnableClipboardNotice(): Boolean {
-        return enableClipboardNotice
-    }
-
-    fun setEnableClipboardNotice(enableClipboardNotice: Boolean) {
-        this.enableClipboardNotice = enableClipboardNotice
-    }
+    var terminalCommand = "/bin/bash -i"
 
     override fun equals(other: Any?) = kotlinEquals(other,TerminalConfig::class.memberProperties.toTypedArray())
 

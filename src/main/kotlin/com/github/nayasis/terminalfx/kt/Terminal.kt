@@ -1,11 +1,9 @@
 package com.github.nayasis.terminalfx.kt
 
-import com.github.nayasis.kotlin.basica.etc.Platforms
 import com.github.nayasis.terminalfx.kt.annotation.WebkitCall
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
 import com.github.nayasis.terminalfx.kt.helper.ThreadHelper
 import com.pty4j.PtyProcess
-import com.pty4j.WinSize
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import java.io.BufferedReader
@@ -19,19 +17,17 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
-import kotlin.collections.ArrayList
 
 class Terminal(
-    terminalConfig: TerminalConfig? = null,
-    private val terminalPath: Path? = null,
-): TerminalView() {
+    terminalConfig: TerminalConfig = TerminalConfig(),
+    val terminalPath: Path? = null,
+): TerminalView(terminalConfig) {
 
     private var process: PtyProcess? = null
     private var outputWriterProperty: ObjectProperty<Writer>? = null
     private var commandQueue: LinkedBlockingQueue<String>? = null
 
     init {
-        terminalConfig?.let { setTerminalConfig(it) }
         outputWriterProperty = SimpleObjectProperty()
         commandQueue = LinkedBlockingQueue()
     }
@@ -63,15 +59,10 @@ class Terminal(
         }
     }
 
-    @Throws(Exception::class)
     private fun initializeProcess() {
 
         val dataDir = getDataDir()
-        val termCommand = if (Platforms.isWindows) {
-            getTerminalConfig().getWindowsTerminalStarter()!!.split("\\s+")
-        } else {
-            getTerminalConfig().getUnixTerminalStarter()!!.split("\\s+")
-        }.toTypedArray()
+        val termCommand = terminalConfig.terminalCommand.split("\\s+").toTypedArray()
 
         val envs = HashMap(System.getenv()).apply {
             put("TERM","xterm")
@@ -82,9 +73,7 @@ class Terminal(
         } else {
             process = PtyProcess.exec(termCommand, envs)
         }
-        columnsProperty()!!.addListener { _ -> updateWinSize() }
-        rowsProperty()!!.addListener { _ -> updateWinSize() }
-        updateWinSize()
+
         val defaultCharEncoding = System.getProperty("file.encoding")
         setInputReader(BufferedReader(InputStreamReader(process!!.inputStream, defaultCharEncoding)))
         setErrorReader(BufferedReader(InputStreamReader(process!!.errorStream, defaultCharEncoding)))
@@ -97,17 +86,6 @@ class Terminal(
     private fun getDataDir(): Path {
         val userHome = System.getProperty("user.home")
         return Paths.get(userHome).resolve(".terminalfx")
-    }
-
-    fun getTerminalPath(): Path? {
-        return terminalPath
-    }
-
-    private fun updateWinSize() {
-        try {
-            process?.setWinSize(WinSize(getColumns(), getRows()))
-        } catch (e: Exception) {
-        }
     }
 
     fun outputWriterProperty(): ObjectProperty<Writer>? {

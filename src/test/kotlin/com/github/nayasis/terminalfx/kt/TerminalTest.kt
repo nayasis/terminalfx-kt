@@ -1,5 +1,6 @@
 package com.github.nayasis.terminalfx.kt
 
+import com.github.nayasis.kotlin.basica.etc.Platforms
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
 import com.github.nayasis.terminalfx.kt.helper.ThreadHelper
 import javafx.application.Application
@@ -16,7 +17,9 @@ fun main() {
 class TerminalTest: Application() {
     override fun start(stage: Stage?) {
 
-        val config = TerminalConfig()
+        val config = TerminalConfig().apply {
+            terminalCommand = if(Platforms.isWindows) "cmd.exe" else "/bin/bash -i"
+        }
         val terminal = Terminal(config, null)
 
         stage?.apply {
