@@ -52,7 +52,7 @@ repositories {
 dependencies {
 
 	// common
-	implementation("com.github.nayasis:basica-kt:0.2.15")
+	implementation("com.github.nayasis:basica-kt:0.2.16")
 	implementation("com.github.nayasis:basicafx-kt:0.1.18")
 	implementation("no.tornado:tornadofx:1.7.20")
 	implementation("de.jensd:fontawesomefx:8.9")

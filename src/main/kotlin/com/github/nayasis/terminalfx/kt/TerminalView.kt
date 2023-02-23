@@ -1,5 +1,6 @@
 package com.github.nayasis.terminalfx.kt
 
+import com.github.nayasis.kotlin.basica.core.io.copyTo
 import com.github.nayasis.kotlin.basica.core.io.delete
 import com.github.nayasis.kotlin.basica.core.io.exists
 import com.github.nayasis.kotlin.basica.core.io.notExists
@@ -20,6 +21,7 @@ import java.io.Reader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.nio.file.StandardCopyOption.*
 import java.util.concurrent.CountDownLatch
 
 private val logger = KotlinLogging.logger {}
@@ -59,7 +61,7 @@ open class TerminalView(
     }
 
     init {
-        initializeResources()
+        prepareHtermResources()
         inputReaderProperty.addListener { _, _, reader -> runAsync {
             printReader( reader )
         }}
@@ -74,7 +76,7 @@ open class TerminalView(
         webView.engine.load(tempDirectory!!.resolve("hterm.html").toUri().toString())
     }
 
-    private fun initializeResources() {
+    private fun prepareHtermResources() {
         if(tempDirectory.notExists()) {
             tempDirectory = Files.createTempDirectory("TerminalFX_Temp")
         }
@@ -86,7 +88,7 @@ open class TerminalView(
         val file = tempDirectory!!.resolve(resourceName)
         if(file.notExists()) {
             TerminalView::class.java.getResourceAsStream("/$resourceName").use {
-                Files.copy(it, file, StandardCopyOption.REPLACE_EXISTING )
+                it.copyTo(file, REPLACE_EXISTING)
             }
         }
     }
@@ -145,7 +147,7 @@ open class TerminalView(
         }
     }
 
-    protected fun print(text: String?) {
+    fun print(text: String?) {
         await()
         runLater {
             terminalIO.call("print", text)
