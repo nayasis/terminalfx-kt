@@ -61,7 +61,12 @@ class TerminalConfig {
     var userCss = "data:text/plain;base64,eC1zY3JlZW4geyBjdXJzb3I6IGF1dG87IH0="
 
     @JsonIgnore
-    var size: TerminalSize = TerminalSize()
+    var size: TerminalSize? = null
+        get() {
+            if(field == null)
+                field = TerminalSize()
+            return field
+        }
 
     override fun equals(other: Any?) = kotlinEquals(other,TerminalConfig::class.memberProperties.toTypedArray())
 

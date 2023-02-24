@@ -6,6 +6,7 @@ import com.github.nayasis.kotlin.basica.core.string.toPath
 import com.github.nayasis.kotlin.basica.etc.error
 import com.github.nayasis.terminalfx.kt.annotation.WebkitCall
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
+import com.github.nayasis.terminalfx.kt.config.TerminalSize
 import com.pty4j.PtyProcess
 import com.pty4j.PtyProcessBuilder
 import com.pty4j.WinSize
@@ -37,8 +38,8 @@ class Terminal(
         private set
 
     private val commandQueue    = LinkedBlockingQueue<String>()
-    private val columnsProperty = ReadOnlyIntegerWrapper(config.size.columns)
-    private val rowsProperty    = ReadOnlyIntegerWrapper(config.size.rows)
+    private val columnsProperty = ReadOnlyIntegerWrapper(config.size!!.columns)
+    private val rowsProperty    = ReadOnlyIntegerWrapper(config.size!!.rows)
 
     private val outputWriterProperty = SimpleObjectProperty<Writer?>()
     var outputWriter: Writer?
