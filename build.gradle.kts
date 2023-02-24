@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+	`java-library`
 	`maven-publish`
 	kotlin("jvm") version "1.8.10"
 	kotlin("plugin.jpa") version "1.8.10"
@@ -37,6 +38,11 @@ javafx {
 group = "com.github.nayasis"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
+
+java {
+	withJavadocJar()
+	withSourcesJar()
+}
 
 configurations.all {
 	resolutionStrategy.cacheChangingModulesFor(0, "seconds")
