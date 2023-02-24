@@ -1,7 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.joor.Reflect.wrapper
 
 plugins {
-	`java-library`
+	`java`
 	`maven-publish`
 	kotlin("jvm") version "1.8.10"
 	kotlin("plugin.jpa") version "1.8.10"
@@ -26,10 +27,6 @@ noArg {
 	invokeInitializers = true
 }
 
-application {
-	mainClass.set("x.y.z")
-}
-
 javafx {
 	version = "19.0.2.1"
 	modules = listOf("javafx.controls","javafx.web","javafx.swing")
@@ -38,6 +35,7 @@ javafx {
 group = "com.github.nayasis"
 version = "0.0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
+java.targetCompatibility = JavaVersion.VERSION_11
 
 java {
 	withJavadocJar()
@@ -94,9 +92,6 @@ tasks.withType<KotlinCompile> {
 publishing {
 	publications {
 		create<MavenPublication>("maven") {
-			groupId = "${group}"
-			artifactId = "${rootProject.name}"
-			version = "${version}"
 			from(components["java"])
 		}
 	}
