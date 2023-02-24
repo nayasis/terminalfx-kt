@@ -43,6 +43,7 @@ class TerminalTest: Application() {
             },
             onDone = {
                 runLater {
+                    it.close()
                     stage?.close()
                 }
             }

@@ -32,16 +32,16 @@ open class TerminalView(
 ): Pane() {
 
     private val webView = WebView()
-    private val inputReaderProperty = SimpleObjectProperty<Reader>()
-    private val errorReaderProperty = SimpleObjectProperty<Reader>()
+    private val inputReaderProperty = SimpleObjectProperty<Reader?>()
+    private val errorReaderProperty = SimpleObjectProperty<Reader?>()
 
     protected val countDownLatch = CountDownLatch(1)
 
-    var inputReader: Reader
+    var inputReader: Reader?
         get() = inputReaderProperty.get()
         set(reader) = inputReaderProperty.set(reader)
 
-    var errorReader: Reader
+    var errorReader: Reader?
         get() = errorReaderProperty.get()
         set(reader) = errorReaderProperty.set(reader)
 
@@ -64,7 +64,7 @@ open class TerminalView(
         inputReaderProperty.addListener { _, _, reader -> runAsync {
             printReader( reader )
         }}
-        errorReaderProperty.addListener { _, _, reader: Reader -> runAsync {
+        errorReaderProperty.addListener { _, _, reader -> runAsync {
             printReader( reader )
         }}
         webView.prefHeightProperty().bind(heightProperty())
@@ -120,7 +120,8 @@ open class TerminalView(
         }
     }
 
-    private fun printReader(reader: Reader) {
+    private fun printReader(reader: Reader?) {
+        if(reader == null) return
         var nRead: Int
         val data = CharArray(1 * 1024)
         runCatching {

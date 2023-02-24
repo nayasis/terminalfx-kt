@@ -34,10 +34,10 @@ class Terminal(
     var process: Process? = null
         private set
 
-    private val outputWriterProperty = SimpleObjectProperty<Writer>()
+    private val outputWriterProperty = SimpleObjectProperty<Writer?>()
     private val commandQueue = LinkedBlockingQueue<String>()
 
-    var outputWriter: Writer
+    var outputWriter: Writer?
         get() = outputWriterProperty.get()
         set(writer) = outputWriterProperty.set(writer)
 
@@ -45,9 +45,11 @@ class Terminal(
     fun command(command: String) {
         commandQueue.put(command)
         runAsync {
-            outputWriter.run {
-                write(commandQueue.poll())
-                flush()
+            outputWriter?.run {
+                runCatching {
+                    write(commandQueue.poll())
+                    flush()
+                }
             }
         }
     }
@@ -90,7 +92,6 @@ class Terminal(
                 onFail?.invoke(this, e)
             }
         } finally {
-            close()
             runCatching {
                 onDone?.invoke(this)
             }
@@ -103,9 +104,9 @@ class Terminal(
             process?.destroy()
             process = null
         }
-        runCatching { inputReader.close() }
-        runCatching { errorReader.close() }
-        runCatching { outputWriter.close() }
+        runCatching { inputReader?.close() }
+        runCatching { errorReader?.close() }
+        runCatching { outputWriter?.close() }
     }
 
     private fun getEnvironment(): Map<String, String> {
