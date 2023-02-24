@@ -6,11 +6,13 @@ import com.github.nayasis.kotlin.basica.core.string.toPath
 import com.github.nayasis.kotlin.basica.etc.error
 import com.github.nayasis.terminalfx.kt.annotation.WebkitCall
 import com.github.nayasis.terminalfx.kt.config.TerminalConfig
+import com.pty4j.PtyProcess
 import com.pty4j.PtyProcessBuilder
+import com.pty4j.WinSize
+import javafx.beans.property.ReadOnlyIntegerWrapper
 import javafx.beans.property.SimpleObjectProperty
 import mu.KotlinLogging
 import tornadofx.runAsync
-import tornadofx.runLater
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
@@ -31,15 +33,23 @@ class Terminal(
     var onSuccess: ((terminal: Terminal, exitValue: Int) -> Unit)? = null,
 ): TerminalView(config) {
 
-    var process: Process? = null
+    var process: PtyProcess? = null
         private set
 
-    private val outputWriterProperty = SimpleObjectProperty<Writer?>()
-    private val commandQueue = LinkedBlockingQueue<String>()
+    private val commandQueue    = LinkedBlockingQueue<String>()
+    private val columnsProperty = ReadOnlyIntegerWrapper(config.size.columns)
+    private val rowsProperty    = ReadOnlyIntegerWrapper(config.size.rows)
 
+    private val outputWriterProperty = SimpleObjectProperty<Writer?>()
     var outputWriter: Writer?
         get() = outputWriterProperty.get()
         set(writer) = outputWriterProperty.set(writer)
+
+    @WebkitCall(from = "hterm")
+    fun resizeTerminal(columns: Int, rows: Int) {
+        columnsProperty.set(columns)
+        rowsProperty.set(rows)
+    }
 
     @WebkitCall
     fun command(command: String) {
@@ -64,7 +74,6 @@ class Terminal(
     }
 
     private fun initializeProcess() {
-
         try {
             process = PtyProcessBuilder(command.toTypedArray())
                 .setEnvironment(getEnvironment())
@@ -74,6 +83,10 @@ class Terminal(
                     }
                 }
                 .start()
+
+            columnsProperty.addListener { _ -> updateTerminalSize() }
+            rowsProperty.addListener { _ -> updateTerminalSize() }
+            updateTerminalSize()
 
             System.getProperty("file.encoding").let { charset ->
                 inputReader  = BufferedReader(InputStreamReader(process!!.inputStream, charset))
@@ -96,7 +109,10 @@ class Terminal(
                 onDone?.invoke(this)
             }
         }
+    }
 
+    fun updateTerminalSize() {
+        process?.winSize = WinSize(columnsProperty.get(), rowsProperty.get())
     }
 
     fun close() {
