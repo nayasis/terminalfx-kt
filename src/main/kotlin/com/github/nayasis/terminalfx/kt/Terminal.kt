@@ -46,6 +46,9 @@ class Terminal(
         get() = outputWriterProperty.get()
         set(writer) = outputWriterProperty.set(writer)
 
+    val terminalSize: TerminalSize
+        get() = TerminalSize(columnsProperty.get(), rowsProperty.get())
+
     @WebkitCall(from = "hterm")
     fun resizeTerminal(columns: Int, rows: Int) {
         columnsProperty.set(columns)
