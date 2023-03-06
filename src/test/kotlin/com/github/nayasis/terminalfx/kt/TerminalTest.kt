@@ -10,6 +10,7 @@ import javafx.scene.paint.Color
 import javafx.stage.Stage
 import mu.KotlinLogging
 import tornadofx.launch
+import tornadofx.runLater
 import kotlin.system.exitProcess
 
 private val logger = KotlinLogging.logger {}
@@ -41,7 +42,10 @@ class TerminalTest: Application() {
                 """.trimIndent() }
             },
             onDone = {
-                stage?.close()
+                runLater {
+                    it.close()
+                    stage?.close()
+                }
             }
         )
 

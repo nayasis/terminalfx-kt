@@ -2,6 +2,7 @@ package com.github.nayasis.terminalfx.kt.config
 
 import au.com.console.kassava.kotlinEquals
 import au.com.console.kassava.kotlinHashCode
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonInclude.*
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -59,11 +60,24 @@ class TerminalConfig {
     @JsonProperty(value = "user-css")
     var userCss = "data:text/plain;base64,eC1zY3JlZW4geyBjdXJzb3I6IGF1dG87IH0="
 
+    @JsonIgnore
+    var size: TerminalSize? = null
+        get() {
+            if(field == null)
+                field = TerminalSize()
+            return field
+        }
+
     override fun equals(other: Any?) = kotlinEquals(other,TerminalConfig::class.memberProperties.toTypedArray())
 
     override fun hashCode(): Int = kotlinHashCode(properties = TerminalConfig::class.memberProperties.toTypedArray())
 
 }
+
+data class TerminalSize(
+    val columns: Int = 100,
+    val rows: Int = 60,
+)
 
 fun Color.toHex(): String {
     return "#%02X%02X%02X".format(
