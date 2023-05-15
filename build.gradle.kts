@@ -51,8 +51,8 @@ repositories {
 }
 
 dependencies {
-	implementation("com.github.nayasis:basica-kt:0.2.16")
-	implementation("com.github.nayasis:basicafx-kt:0.1.18")
+	implementation("com.github.nayasis:basica-kt:0.2.22")
+	implementation("com.github.nayasis:basicafx-kt:0.1.20")
 	implementation("no.tornado:tornadofx:1.7.20")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
 	implementation("org.jetbrains.pty4j:pty4j:0.12.10")
