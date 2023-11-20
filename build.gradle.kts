@@ -3,24 +3,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
 	`java`
 	`maven-publish`
-	kotlin("jvm") version "1.8.10"
-	kotlin("plugin.jpa") version "1.8.10"
-	kotlin("plugin.noarg") version "1.8.10"
-	kotlin("plugin.allopen") version "1.8.10"
-	id("org.openjfx.javafxplugin") version "0.0.10"
+	kotlin("jvm") version "1.9.20"
+	id("org.openjfx.javafxplugin") version "0.0.14"
 }
 
-allOpen {
-	annotation("javax.persistence.Entity")
-	annotation("javax.persistence.MappedSuperclass")
-	annotation("javax.persistence.Embeddable")
-}
-noArg {
-	annotation("javax.persistence.Entity")
-	annotation("javax.persistence.MappedSuperclass")
-	annotation("javax.persistence.Embeddable")
-	annotation("com.github.nayasis.kotlin.spring.kotlin.annotation.NoArg")
-	invokeInitializers = true
+java {
+	sourceCompatibility = JavaVersion.VERSION_11
+	targetCompatibility = JavaVersion.VERSION_11
+	withJavadocJar()
+	withSourcesJar()
 }
 
 javafx {
@@ -30,14 +21,6 @@ javafx {
 
 group = "com.github.nayasis"
 version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_11
-java.targetCompatibility = JavaVersion.VERSION_11
-
-java {
-	withJavadocJar()
-	withSourcesJar()
-}
-
 configurations.all {
 	resolutionStrategy.cacheChangingModulesFor(0, "seconds")
 	resolutionStrategy.cacheDynamicVersionsFor(5, "minutes")
@@ -51,8 +34,8 @@ repositories {
 }
 
 dependencies {
-	implementation("com.github.nayasis:basica-kt:0.2.16")
-	implementation("com.github.nayasis:basicafx-kt:0.1.18")
+	implementation("com.github.nayasis:basica-kt:0.3.1")
+	implementation("com.github.nayasis:basicafx-kt:0.2.1")
 	implementation("no.tornado:tornadofx:1.7.20")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
 	implementation("org.jetbrains.pty4j:pty4j:0.12.10")

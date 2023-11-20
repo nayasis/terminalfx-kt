@@ -1,6 +1,6 @@
 package com.github.nayasis.terminalfx.kt
 
-import com.github.nayasis.kotlin.basica.core.extention.isNotEmpty
+import com.github.nayasis.kotlin.basica.core.extension.isNotEmpty
 import com.github.nayasis.kotlin.basica.core.io.exists
 import com.github.nayasis.kotlin.basica.core.string.toPath
 import com.github.nayasis.kotlin.basica.etc.error
@@ -13,7 +13,7 @@ import com.pty4j.WinSize
 import javafx.beans.property.ReadOnlyIntegerWrapper
 import javafx.beans.property.SimpleObjectProperty
 import mu.KotlinLogging
-import tornadofx.runAsync
+import tornadofx.*
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
